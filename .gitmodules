@@ -1,0 +1,3 @@
+[submodule "deps/cplat"]
+	path = deps/cplat
+	url = git@github.com:Spleeshmicannon/cplat.git

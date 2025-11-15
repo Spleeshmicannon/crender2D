@@ -1,0 +1,6 @@
+linux-bin
+linux-build
+win32-bin
+win32-build
+.cbuild
+.cache
