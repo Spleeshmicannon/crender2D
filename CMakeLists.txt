@@ -31,14 +31,6 @@ endif()
 
 add_subdirectory("deps/cplat")
 
-file(GLOB_RECURSE GLAD_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/deps/glad/src/*.c"
-)
-add_library(glad STATIC ${GLAD_SOURCES})
-target_include_directories(glad PUBLIC 
-    "${CMAKE_CURRENT_SOURCE_DIR}/deps/glad/include" 
-)
-
 add_library(crender2D STATIC ${LIB_SOURCES})
 
 if(MSVC)
@@ -57,16 +49,22 @@ else()
     )
 endif()
 
-target_link_libraries(crender2D PRIVATE glad cplat)
-target_include_directories(crender2D PRIVATE 
-    "${CMAKE_CURRENT_SOURCE_DIR}/deps/glad/include" 
+target_include_directories(crender2D PUBLIC 
     "${CMAKE_CURRENT_SOURCE_DIR}/deps/cplat/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/deps/Vulkan-Headers/include"
 )
 
+target_compile_definitions(crender2D PRIVATE CRENDER_DEBUG)
 if(WIN32)
-    target_link_libraries(crender2D PUBLIC opengl32)
+    if(DEFINED ENV{VULKAN_HOME})
+        set(VULKAN_HOME $ENV{VULKAN_HOME})
+        message(STATUS "Using vulkan sdk: ${VULKAN_HOME}")
+        target_link_libraries(crender2D PRIVATE cplat "${VULKAN_HOME}/Lib/vulkan-1.lib")
+    else()
+        message(FATAL_ERROR "Required environment variable: VULKAN_HOME")
+    endif()
 else()
-    target_link_libraries(crender2D PUBLIC GL)
+    target_link_libraries(crender2D PRIVATE cplat vulkan)
 endif()
 
 target_link_libraries(cplat PUBLIC)

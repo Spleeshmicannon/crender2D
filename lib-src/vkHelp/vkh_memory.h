@@ -1,0 +1,82 @@
+/* zlib license
+ * Copyright (C) 2025-11-20 19:12:26 J. Benson
+ * 
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ * 
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ * 
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution. 
+*/
+
+#ifndef VKH_MEMORY_H
+#define VKH_MEMORY_H
+
+#include <stddef.h>
+#include <cplat.h>
+
+#define ARENA_SIZE 10000000 // 10 megabytes
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct
+{
+    void* arenaStart;
+    void* head;
+    size_t arenaSize;
+    void* checkpoint;
+}
+CR_Arena;
+
+CP_INLINE CR_Arena CR_createArena(bool *success)
+{
+    CR_Arena arena = {0};
+
+    arena.arenaStart = CP_sysAllocate(ARENA_SIZE);
+    arena.arenaSize = ARENA_SIZE;
+    arena.head = arena.arenaStart;
+
+    *success = arena.arenaStart != NULL;
+    
+    return arena;
+}
+
+CP_INLINE void CR_destoryArena(CR_Arena arena)
+{
+    CP_sysFree(arena.arenaStart);
+}
+
+CP_INLINE void CR_ArenaSetCheckpoint(CR_Arena* arena)
+{
+    arena->checkpoint = arena->head;
+}
+
+CP_INLINE void CR_ArenaResetToLastCheckpoint(CR_Arena* arena)
+{
+    arena->head = arena->checkpoint;
+}
+
+CP_INLINE void* CR_ArenaAllocate(CR_Arena* arena, size_t bytes)
+{
+    void* oldHead = arena->head; 
+    arena->head += bytes;
+    return oldHead;
+}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // VKH_MEMORY_H
+

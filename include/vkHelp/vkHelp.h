@@ -1,5 +1,5 @@
 /* zlib license
- * Copyright (C) 2025 J. Benson
+ * Copyright (C) 2025-11-16 16:18:44 J. Benson
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -15,52 +15,43 @@
  *    appreciated but is not required.
  * 2. Altered source versions must be plainly marked as such, and must not be
  *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
+ * 3. This notice may not be removed or altered from any source distribution. 
 */
 
-#ifndef CRENDER2D_H
-#define CRENDER2D_H
+#ifndef VKHELP_H
+#define VKHELP_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <cplat.h>
-#include "vkHelp/vkh_include.h"
+#include <vulkan/vulkan.h>
 
-typedef enum
+VkInstance createVkInstance(const char*const title)
 {
-    CR_ERROR_SUCCESS = 0,
-    CR_ERROR_SHADER_COMPILATION_FAILED = 1,
+    VkApplicationInfo appInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
+    VkInstanceCreateInfo createInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
+    VkInstance instance = NULL;
+    
+    // setup Application info
+    appInfo.apiVersion = VK_API_VERSION_1_4;
+    appInfo.pApplicationName = title;
+    appInfo.pEngineName = "CRender2D";
+    appInfo.engineVersion = VK_MAKE_VERSION(0,1,0);
+    
+    // setup instance create info
+    createInfo.pApplicationInfo = &appInfo;
+
+
+    
+    // create instance
+    vkCreateInstance(&createInfo, NULL, &instance);
+    return instance;
 }
-CR_ERROR;
-
-typedef enum
-{
-    CR_RENDER_NO_FLAGS = 0x00
-}
-CR_RENDER_FLAGS;
-
-typedef struct
-{
-    uint8_t flags;
-}
-CR_RendererConfig;
-
-typedef struct
-{
-    VkInstance instance;
-    VkSurfaceKHR surface;
-}
-CR_Renderer;
-
-CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*const config, const CP_Window*const window);
-
-CR_ERROR CR_destroyRenderer(CR_Renderer*const renderer);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CRENDER2D_H
+#endif // VKHELP_H
+

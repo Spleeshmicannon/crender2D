@@ -8,7 +8,7 @@ CP_Window createWindow()
     const CP_WindowConfig config = {
         .width = 1920,
         .height = 1080,
-        .flags = CP_WINDOW_FLAGS_INIT_OPENGL,
+        .flags = 0,
         .major = 4,
         .minor = 3,
         .windowName = "test"

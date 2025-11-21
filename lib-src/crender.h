@@ -26,12 +26,17 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <cplat.h>
+
+#include "vkHelp/vkh_include.h"
+#include "vkHelp/vkh_memory.h"
 
 typedef enum
 {
-    CR_ERROR_GLAD_FAILED = 0,
-    CR_ERROR_SHADER_COMPILATION_FAILED = -1,
-    CR_ERROR_SUCCESS = 1 
+    CR_ERROR_SUCCESS = 0,
+    CR_ERROR_SHADER_COMPILATION_FAILED = 1,
+    CR_ERROR_VULKAN_CALL_FAILED = 2,
+    CR_ERROR_ALLOC_FAILED = 3
 }
 CR_ERROR;
 
@@ -49,11 +54,14 @@ CR_RendererConfig;
 
 typedef struct
 {
-    unsigned int shader_program;
+    VkInstance instance;
+    VkSurfaceKHR surface;
+
+    CR_Arena memArena;
 }
 CR_Renderer;
 
-CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*const config);
+CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*const config, const CP_Window*const window);
 
 CR_ERROR CR_destroyRenderer(CR_Renderer*const renderer);
 
