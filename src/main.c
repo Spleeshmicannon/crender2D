@@ -24,14 +24,14 @@ CP_Window createWindow()
     return window;
 }
 
-CR_Renderer createRenderer()
+CR_Renderer createRenderer(const CP_Window* const window)
 {
     CR_Renderer renderer;
     const CR_RendererConfig config = {
         .flags = 0
     };
 
-    CR_ERROR error = CR_createRenderer(&renderer, &config);
+    CR_ERROR error = CR_createRenderer(&renderer, &config, window);
     if(error != CR_ERROR_SUCCESS)
     {
         CP_log_fatal("CP failed to create renderer");
@@ -44,7 +44,7 @@ CR_Renderer createRenderer()
 int main()
 {
     CP_Window window = createWindow();
-    CR_Renderer renderer = createRenderer();
+    CR_Renderer renderer = createRenderer(&window);
     
     for(CP_WindowEvent event = CP_getNextEvent(&window); // zero initialise
         event.type != CP_EVENT_QUIT; // end loop if user quits

@@ -27,12 +27,16 @@ extern "C" {
 
 #include <stdint.h>
 #include <cplat.h>
+
 #include "vkHelp/vkh_include.h"
+#include "vkHelp/vkh_memory.h"
 
 typedef enum
 {
     CR_ERROR_SUCCESS = 0,
     CR_ERROR_SHADER_COMPILATION_FAILED = 1,
+    CR_ERROR_VULKAN_CALL_FAILED = 2,
+    CR_ERROR_ALLOC_FAILED = 3
 }
 CR_ERROR;
 
@@ -52,6 +56,7 @@ typedef struct
 {
     VkInstance instance;
     VkSurfaceKHR surface;
+    CR_Arena memArena;
 }
 CR_Renderer;
 

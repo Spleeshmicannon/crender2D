@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "vkh_include.h"
+#include "vkh_memory.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,6 +74,56 @@ CP_INLINE VkInstance createVkInstance(
 
     return instance;
 }
+
+CP_INLINE VkDevice findPhysicalDevice(VkInstance instance, CR_Arena*const arena)
+{
+    uint32_t deviceCount = 0;
+    VkResult res = !VK_SUCCESS;
+    VkPhysicalDevice* physicalDevice = NULL;
+
+    res = vkEnumeratePhysicalDevices(instance, &deviceCount, VK_NULL_HANDLE);
+
+    if(VK_SUCCESS != res)
+    {
+        CP_log_error("Failed to check physical devices with error: %s", vkResultToString(res));
+        return VK_NULL_HANDLE;
+    }
+    else if(0 == deviceCount)
+    {
+        CP_log_error("No compatable physical devices found!");
+        return VK_NULL_HANDLE;
+    }
+
+    CR_ArenaSetCheckpoint(arena);
+    physicalDevice = CR_ArenaAllocate(arena, sizeof(VkPhysicalDevice) * deviceCount);
+    res = vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevice);
+
+    if(VK_SUCCESS != res)
+    {
+        CR_ArenaResetToLastCheckpoint(arena);
+        CP_log_error("Failed to read physical devices with error: %s", vkResultToString(res));
+        return VK_NULL_HANDLE;
+    }
+
+    for(uint32_t i = 0; i < deviceCount; ++i)
+    {
+        VkPhysicalDeviceProperties props;
+        VkPhysicalDeviceFeatures feats;
+        VkPhysicalDeviceMemoryProperties memProps;
+        
+        vkGetPhysicalDeviceProperties(physicalDevice[i], &props);
+        vkGetPhysicalDeviceFeatures(physicalDevice[i], &feats);
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice[i], &memProps);
+
+        CP_log_info("Found Device %s", props.deviceName);
+    }
+
+    CR_ArenaResetToLastCheckpoint(arena);
+
+    return VK_NULL_HANDLE;
+}
+
+
 
 #ifdef __cplusplus
 }

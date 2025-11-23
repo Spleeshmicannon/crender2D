@@ -31,7 +31,7 @@ extern "C" {
 CP_INLINE VkSurfaceKHR createSurface(const VkInstance instance, const CP_Window*const window)
 {
     VkWin32SurfaceCreateInfoKHR createInfo = { 0 };
-    createInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
     createInfo.hwnd = window->hwnd;
     createInfo.hinstance = window->hinst;
 

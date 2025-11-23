@@ -10,11 +10,10 @@
 CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*const config, const CP_Window*const window)
 {
     (void)config;
+    (void)window;
+    (void)renderer;
     
-    bool success;
-    renderer->memArena = CR_createArena(&success);
-
-    if(!success)
+    if(!CR_createArena(&renderer->memArena))
     {
         return CR_ERROR_ALLOC_FAILED;
     }
@@ -54,11 +53,14 @@ CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*c
         return CR_ERROR_VULKAN_CALL_FAILED;
     }
 
+    findPhysicalDevice(renderer->instance, &renderer->memArena);
+
     return CR_ERROR_SUCCESS;
 }
 
 CR_ERROR CR_destroyRenderer(CR_Renderer*const renderer)
 {
+    vkDestroySurfaceKHR(renderer->instance, renderer->surface, NULL);
     vkDestroyInstance(renderer->instance, NULL);
     CR_destoryArena(renderer->memArena);
     return CR_ERROR_SUCCESS;

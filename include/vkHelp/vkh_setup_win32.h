@@ -30,14 +30,14 @@ extern "C" {
 
 CP_INLINE VkSurfaceKHR createSurface(const VkInstance instance, const CP_Window*const window)
 {
-    VkXcbSurfaceCreateInfoKHR createInfo = { 0 };
-    createInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-    createInfo.connection = window->connection;
-    createInfo.window = window->windowId;
+    VkWin32SurfaceCreateInfoKHR createInfo = { 0 };
+    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    createInfo.hwnd = window->hwnd;
+    createInfo.hinstance = window->hinst;
 
     VkSurfaceKHR surface;
 
-    VkResult res = vkCreateXcbSurfaceKHR(instance, &createInfo, NULL, &surface);
+    VkResult res = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface);
     if(VK_SUCCESS != res)
     {
         CP_log_error("Failed to create surface with error: %s", vkResultToString(res));

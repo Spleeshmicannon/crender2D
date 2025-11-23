@@ -56,7 +56,6 @@ typedef struct
 {
     VkInstance instance;
     VkSurfaceKHR surface;
-
     CR_Arena memArena;
 }
 CR_Renderer;

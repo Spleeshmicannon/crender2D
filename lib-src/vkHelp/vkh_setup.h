@@ -95,7 +95,6 @@ CP_INLINE VkDevice findPhysicalDevice(VkInstance instance, CR_Arena*const arena)
     }
 
     CR_ArenaSetCheckpoint(arena);
-
     physicalDevice = CR_ArenaAllocate(arena, sizeof(VkPhysicalDevice) * deviceCount);
     res = vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevice);
 
@@ -108,7 +107,20 @@ CP_INLINE VkDevice findPhysicalDevice(VkInstance instance, CR_Arena*const arena)
 
     for(uint32_t i = 0; i < deviceCount; ++i)
     {
+        VkPhysicalDeviceProperties props;
+        VkPhysicalDeviceFeatures feats;
+        VkPhysicalDeviceMemoryProperties memProps;
+        
+        vkGetPhysicalDeviceProperties(physicalDevice[i], &props);
+        vkGetPhysicalDeviceFeatures(physicalDevice[i], &feats);
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice[i], &memProps);
+
+        CP_log_info("Found Device %s", props.deviceName);
     }
+
+    CR_ArenaResetToLastCheckpoint(arena);
+
+    return VK_NULL_HANDLE;
 }
 
 
