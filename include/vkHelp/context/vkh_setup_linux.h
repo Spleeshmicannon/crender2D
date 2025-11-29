@@ -22,13 +22,13 @@
 #define VKH_SETUP_LINUX_H
 
 #include <cplat.h>
-#include "vkh_include.h"
+#include "../vkh_include.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-CP_INLINE VkSurfaceKHR createSurface(const VkInstance instance, const CP_Window*const window)
+CP_INLINE VkSurfaceKHR VKH_createSurface(const VkInstance instance, const CP_Window*const window)
 {
     VkXcbSurfaceCreateInfoKHR createInfo = { 0 };
     createInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;

@@ -24,8 +24,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <cplat.h>
-
-#define ARENA_SIZE 10000 // 10 megabytes
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,16 +35,15 @@ typedef struct
     void* arenaStart;
     void* head;
     size_t arenaSize;
-    void* checkpoint;
 }
 CR_Arena;
 
-CP_INLINE bool CR_createArena(CR_Arena*const arena)
+CP_INLINE bool CR_createArena(CR_Arena*const arena, const size_t arenaSize)
 {
     bool success = false;
 
-    arena->arenaStart = CP_sysAllocate(ARENA_SIZE);
-    arena->arenaSize = ARENA_SIZE;
+    arena->arenaStart = CP_sysAllocate(arenaSize);
+    arena->arenaSize = arenaSize;
     arena->head = arena->arenaStart;
 
     success = arena->arenaStart != NULL;
@@ -58,16 +56,6 @@ CP_INLINE void CR_destoryArena(CR_Arena arena)
     CP_sysFree(arena.arenaStart);
 }
 
-CP_INLINE void CR_ArenaSetCheckpoint(CR_Arena* arena)
-{
-    arena->checkpoint = arena->head;
-}
-
-CP_INLINE void CR_ArenaResetToLastCheckpoint(CR_Arena* arena)
-{
-    arena->head = arena->checkpoint;
-}
-
 CP_INLINE void* CR_ArenaAllocate(CR_Arena* arena, size_t bytes)
 {
     void* oldHead = arena->head; 
@@ -75,6 +63,7 @@ CP_INLINE void* CR_ArenaAllocate(CR_Arena* arena, size_t bytes)
     if((size_t)(oldHead - arena->arenaStart) >= arena->arenaSize)
     {
         CP_log_error("Failed to allocate to arena");
+        exit(-1);
         return NULL;
     }
 

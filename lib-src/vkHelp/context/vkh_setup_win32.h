@@ -1,5 +1,5 @@
 /* zlib license
- * Copyright (C) 2025 J. Benson
+ * Copyright (C) 2025-11-20 18:34:10 J. Benson
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -15,56 +15,41 @@
  *    appreciated but is not required.
  * 2. Altered source versions must be plainly marked as such, and must not be
  *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
+ * 3. This notice may not be removed or altered from any source distribution. 
 */
 
-#ifndef CRENDER2D_H
-#define CRENDER2D_H
+#ifndef VKH_SETUP_WIN32_H
+#define VKH_SETUP_WIN32_H
+
+#include <cplat.h>
+#include "../vkh_include.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <cplat.h>
-
-#include "vkHelp/vkh.h"
-
-typedef enum
+CP_INLINE VkSurfaceKHR VKH_createSurface(const VkInstance instance, const CP_Window*const window)
 {
-    CR_ERROR_SUCCESS = 0,
-    CR_ERROR_SHADER_COMPILATION_FAILED = 1,
-    CR_ERROR_VULKAN_CALL_FAILED = 2,
-    CR_ERROR_ALLOC_FAILED = 3
+    VkWin32SurfaceCreateInfoKHR createInfo = { 0 };
+    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    createInfo.hwnd = window->hwnd;
+    createInfo.hinstance = window->hinst;
+
+    VkSurfaceKHR surface;
+
+    VkResult res = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface);
+    if(VK_SUCCESS != res)
+    {
+        CP_log_error("Failed to create surface with error: %s", vkResultToString(res));
+        return VK_NULL_HANDLE;
+    }
+
+    return surface;
 }
-CR_ERROR;
-
-typedef enum
-{
-    CR_RENDER_NO_FLAGS = 0x00
-}
-CR_RENDER_FLAGS;
-
-typedef struct
-{
-    uint8_t flags;
-}
-CR_RendererConfig;
-
-typedef struct
-{
-    VKH_Context context;
-    VKH_Device device;
-    CR_Arena memArena;
-}
-CR_Renderer;
-
-CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*const config, const CP_Window*const window);
-
-CR_ERROR CR_destroyRenderer(CR_Renderer*const renderer);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CRENDER2D_H
+#endif // VKH_SETUP_WIN32_H
+

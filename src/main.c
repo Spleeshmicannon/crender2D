@@ -21,6 +21,8 @@ CP_Window createWindow()
         exit(-1);
     }
 
+    CP_log_info("Created the window!");
+
     return window;
 }
 
@@ -37,6 +39,8 @@ CR_Renderer createRenderer(const CP_Window* const window)
         CP_log_fatal("CP failed to create renderer");
         exit(-1);
     }
+
+    CP_log_info("Created the renderer!");
 
     return renderer;
 }

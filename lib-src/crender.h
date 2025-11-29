@@ -28,8 +28,7 @@ extern "C" {
 #include <stdint.h>
 #include <cplat.h>
 
-#include "vkHelp/vkh_include.h"
-#include "vkHelp/vkh_memory.h"
+#include "vkHelp/vkh.h"
 
 typedef enum
 {
@@ -54,8 +53,8 @@ CR_RendererConfig;
 
 typedef struct
 {
-    VkInstance instance;
-    VkSurfaceKHR surface;
+    VKH_Context context;
+    VKH_Device device;
     CR_Arena memArena;
 }
 CR_Renderer;

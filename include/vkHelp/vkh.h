@@ -1,5 +1,5 @@
 /* zlib license
- * Copyright (C) 2025 J. Benson
+ * Copyright (C) 2025-11-16 16:18:44 J. Benson
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -15,56 +15,25 @@
  *    appreciated but is not required.
  * 2. Altered source versions must be plainly marked as such, and must not be
  *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
+ * 3. This notice may not be removed or altered from any source distribution. 
 */
 
-#ifndef CRENDER2D_H
-#define CRENDER2D_H
+#ifndef VKH_H
+#define VKH_H
+
+#include "vkh_include.h"
+#include "vkh_memory.h"
+
+#include "context/vkh_context.h"
+#include "device/vkh_device.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <cplat.h>
-
-#include "vkHelp/vkh.h"
-
-typedef enum
-{
-    CR_ERROR_SUCCESS = 0,
-    CR_ERROR_SHADER_COMPILATION_FAILED = 1,
-    CR_ERROR_VULKAN_CALL_FAILED = 2,
-    CR_ERROR_ALLOC_FAILED = 3
-}
-CR_ERROR;
-
-typedef enum
-{
-    CR_RENDER_NO_FLAGS = 0x00
-}
-CR_RENDER_FLAGS;
-
-typedef struct
-{
-    uint8_t flags;
-}
-CR_RendererConfig;
-
-typedef struct
-{
-    VKH_Context context;
-    VKH_Device device;
-    CR_Arena memArena;
-}
-CR_Renderer;
-
-CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*const config, const CP_Window*const window);
-
-CR_ERROR CR_destroyRenderer(CR_Renderer*const renderer);
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CRENDER2D_H
+#endif // VKH_H
+

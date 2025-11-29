@@ -1,5 +1,5 @@
 /* zlib license
- * Copyright (C) 2025-11-20 18:34:10 J. Benson
+ * Copyright (C) 2025-11-20 18:34:03 J. Benson
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -18,26 +18,26 @@
  * 3. This notice may not be removed or altered from any source distribution. 
 */
 
-#ifndef VKH_SETUP_WIN32_H
-#define VKH_SETUP_WIN32_H
+#ifndef VKH_SETUP_LINUX_H
+#define VKH_SETUP_LINUX_H
 
 #include <cplat.h>
-#include "vkh_include.h"
+#include "../vkh_include.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-CP_INLINE VkSurfaceKHR createSurface(const VkInstance instance, const CP_Window*const window)
+CP_INLINE VkSurfaceKHR VKH_createSurface(const VkInstance instance, const CP_Window*const window)
 {
-    VkWin32SurfaceCreateInfoKHR createInfo = { 0 };
-    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    createInfo.hwnd = window->hwnd;
-    createInfo.hinstance = window->hinst;
+    VkXcbSurfaceCreateInfoKHR createInfo = { 0 };
+    createInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+    createInfo.connection = window->connection;
+    createInfo.window = window->windowId;
 
     VkSurfaceKHR surface;
 
-    VkResult res = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface);
+    VkResult res = vkCreateXcbSurfaceKHR(instance, &createInfo, NULL, &surface);
     if(VK_SUCCESS != res)
     {
         CP_log_error("Failed to create surface with error: %s", vkResultToString(res));
@@ -51,5 +51,5 @@ CP_INLINE VkSurfaceKHR createSurface(const VkInstance instance, const CP_Window*
 }
 #endif
 
-#endif // VKH_SETUP_WIN32_H
+#endif // VKH_SETUP_LINUX_H
 

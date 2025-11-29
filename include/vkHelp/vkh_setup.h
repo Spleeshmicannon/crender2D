@@ -80,6 +80,8 @@ CP_INLINE VkDevice findPhysicalDevice(VkInstance instance, CR_Arena*const arena)
     uint32_t deviceCount = 0;
     VkResult res = !VK_SUCCESS;
     VkPhysicalDevice* physicalDevice = NULL;
+    void* startHead = arena->head;
+    void* endDeviceLocation = NULL;
 
     res = vkEnumeratePhysicalDevices(instance, &deviceCount, VK_NULL_HANDLE);
 
@@ -93,19 +95,22 @@ CP_INLINE VkDevice findPhysicalDevice(VkInstance instance, CR_Arena*const arena)
         CP_log_error("No compatable physical devices found!");
         return VK_NULL_HANDLE;
     }
+    
+    endDeviceLocation = CR_ArenaAllocate(arena, sizeof(VkPhysicalDevice));
 
-    CR_ArenaSetCheckpoint(arena);
     physicalDevice = CR_ArenaAllocate(arena, sizeof(VkPhysicalDevice) * deviceCount);
     res = vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevice);
 
     if(VK_SUCCESS != res)
     {
-        CR_ArenaResetToLastCheckpoint(arena);
+        arena->head = startHead;
         CP_log_error("Failed to read physical devices with error: %s", vkResultToString(res));
         return VK_NULL_HANDLE;
     }
 
-    for(uint32_t i = 0; i < deviceCount; ++i)
+    bool deviceMeetsRequirements = false;
+    uint32_t i = 0;
+    for(; i < deviceCount; ++i)
     {
         VkPhysicalDeviceProperties props;
         VkPhysicalDeviceFeatures feats;
@@ -115,10 +120,29 @@ CP_INLINE VkDevice findPhysicalDevice(VkInstance instance, CR_Arena*const arena)
         vkGetPhysicalDeviceFeatures(physicalDevice[i], &feats);
         vkGetPhysicalDeviceMemoryProperties(physicalDevice[i], &memProps);
 
-        CP_log_info("Found Device %s", props.deviceName);
+        CP_log_info("Found Device: %s", props.deviceName);
+        CP_log_info("          ID: %d", props.deviceID);
+        CP_log_info("        Type: %s", vkPhysicalDeviceTypeToString(props.deviceType));
+        
+        deviceMeetsRequirements = 
+            props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
+            props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ||
+            props.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
+
+        if(deviceMeetsRequirements)
+        {
+            break;
+        }
     }
 
-    CR_ArenaResetToLastCheckpoint(arena);
+    if(deviceMeetsRequirements)
+    {
+        memcpy(endDeviceLocation, (void*)physicalDevice[i - 1], sizeof(VkPhysicalDevice));
+        arena->head = physicalDevice;
+        return endDeviceLocation;
+    }
+
+    arena->head = startHead;
 
     return VK_NULL_HANDLE;
 }
