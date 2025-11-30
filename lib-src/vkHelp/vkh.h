@@ -26,6 +26,7 @@
 
 #include "context/vkh_context.h"
 #include "device/vkh_device.h"
+#include "vkh_swapchain.h"
 
 #ifdef __cplusplus
 extern "C" {

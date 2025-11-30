@@ -1,5 +1,5 @@
 /* zlib license
- * Copyright (C) 2025-11-20 18:34:10 J. Benson
+ * Copyright (C) 2025-11-30 09:28:49 J. Benson
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -18,38 +18,42 @@
  * 3. This notice may not be removed or altered from any source distribution. 
 */
 
-#ifndef VKH_SETUP_WIN32_H
-#define VKH_SETUP_WIN32_H
+#ifndef VKH_SWAPCHAIN_H
+#define VKH_SWAPCHAIN_H
 
 #include <cplat.h>
 #include "vkh_include.h"
+#include "device/vkh_device.h"
+#include "context/vkh_context.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-CP_INLINE VkSurfaceKHR createSurface(const VkInstance instance, const CP_Window*const window)
+typedef struct
 {
-    VkWin32SurfaceCreateInfoKHR createInfo = { 0 };
-    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    createInfo.hwnd = window->hwnd;
-    createInfo.hinstance = window->hinst;
-
-    VkSurfaceKHR surface;
-
-    VkResult res = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface);
-    if(VK_SUCCESS != res)
-    {
-        CP_log_error("Failed to create surface with error: %s", vkResultToString(res));
-        return VK_NULL_HANDLE;
-    }
-
-    return surface;
+    VkExtent2D resolution;
 }
+VKH_Swapchain;
+
+CP_INLINE bool VKH_createSwapchain(const CP_Window*const window, const VKH_Context*const context, const VKH_Device*const device, VKH_Swapchain*const swapchain)
+{
+    int width, height;
+    CP_getScreenWH(window, &width, &height);
+
+    swapchain->resolution = (VkExtent2D){ (uint32_t)width, (uint32_t)height };
+    
+    //VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    (void)device;
+    (void)context;
+
+    return false;
+}
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // VKH_SETUP_WIN32_H
+#endif // VKH_SWAPCHAIN_H
 

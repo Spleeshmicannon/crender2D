@@ -36,9 +36,9 @@ typedef struct
 } 
 VKH_DevQueFamIndexes;
 
-CP_INLINE uint32_t findBestPhysicalDevice(VkPhysicalDevice* physicalDevices, uint32_t deviceCount);
+CP_INLINE uint32_t VKH_findBestPhysicalDevice(VkPhysicalDevice* physicalDevices, uint32_t deviceCount);
 
-CP_INLINE VkPhysicalDevice findPhysicalDevice(
+CP_INLINE VkPhysicalDevice VKH_findPhysicalDevice(
         const VKH_Context*const context,
         CR_Arena*const arena
 )
@@ -71,12 +71,14 @@ CP_INLINE VkPhysicalDevice findPhysicalDevice(
         return VK_NULL_HANDLE;
     }
 
-    uint32_t bestDeviceIndex = findBestPhysicalDevice(physicalDevices, deviceCount);
+    uint32_t bestDeviceIndex = VKH_findBestPhysicalDevice(physicalDevices, deviceCount);
+
+    arena->head = startHead;
     
     return physicalDevices[bestDeviceIndex];
 }
 
-CP_INLINE uint32_t findBestPhysicalDevice(VkPhysicalDevice* physicalDevices, uint32_t deviceCount)
+CP_INLINE uint32_t VKH_findBestPhysicalDevice(VkPhysicalDevice* physicalDevices, uint32_t deviceCount)
 {
     uint32_t discreteGPUIndex = 0;
     uint32_t integratedGPUIndex = 0;
@@ -110,9 +112,10 @@ CP_INLINE uint32_t findBestPhysicalDevice(VkPhysicalDevice* physicalDevices, uin
     return integratedGPUIndex;
 }
 
-CP_INLINE VKH_DevQueFamIndexes checkDeviceQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, CR_Arena*const arena)
+CP_INLINE VKH_DevQueFamIndexes VKH_checkDeviceQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, CR_Arena*const arena)
 {
     uint32_t queFamCount;
+    void* oldHead = arena->head;
     VkQueueFamilyProperties* queFamProps;
     VKH_DevQueFamIndexes devQueFamIndexes = { 0 };
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queFamCount, VK_NULL_HANDLE);
@@ -164,6 +167,8 @@ CP_INLINE VKH_DevQueFamIndexes checkDeviceQueueFamilies(VkPhysicalDevice device,
 
         CP_log_info("----------------------")
     }
+
+    arena->head = oldHead;
 
     return devQueFamIndexes;
 }

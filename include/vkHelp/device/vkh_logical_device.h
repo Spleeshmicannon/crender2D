@@ -28,22 +28,17 @@
 extern "C" {
 #endif
 
-bool createLogicalDevice(
-    VkDevice*const device, 
-    const VKH_Context*const context, 
+static const char* VKH_SWAPCHAIN_EXTENSION_NAME = "VK_KHR_swapchain";
+
+static CP_INLINE bool VKH_createLogicalDevice(
+    VkDevice*const device,
+    const VkPhysicalDevice physicalDevice,
     const VKH_DevQueFamIndexes*const devQueFamIndexes,
     CR_Arena*const arena)
 {
+    void* oldHead = arena->head;
     uint32_t index = 0;
-    uint32_t* indices = CR_ArenaAllocate(arena, 
-        sizeof(uint32_t) * 
-        (
-            (1 & devQueFamIndexes->computeIsValid) +
-            (1 & devQueFamIndexes->graphicsIsValid) +
-            (1 & devQueFamIndexes->transferIsValid) +
-            (1 & devQueFamIndexes->presentIsValid)
-        )
-    );
+    uint32_t indices[4] = { 0 };
 
     if(devQueFamIndexes->graphicsIsValid)
     {
@@ -52,19 +47,40 @@ bool createLogicalDevice(
 
     if(devQueFamIndexes->presentIsValid)
     {
-        indices[index++] = devQueFamIndexes->presentIndex;
+        if(devQueFamIndexes->presentIndex != indices[0])
+        {
+            indices[index++] = devQueFamIndexes->presentIndex;
+        }
     }
 
     if(devQueFamIndexes->transferIsValid)
     {
-        indices[index++] = devQueFamIndexes->transferIndex;
+        bool duplicate = false;
+        for(uint32_t i = 0; i < index; ++i)
+        {
+            duplicate = duplicate || (devQueFamIndexes->transferIndex == indices[i]);
+        }
+
+        if(!duplicate)
+        {
+            indices[index++] = devQueFamIndexes->transferIndex;
+        }
     }
 
     if(devQueFamIndexes->computeIsValid)
     {
-        indices[index++] = devQueFamIndexes->computeIndex;
-    }
+        bool duplicate = false;
+        for(uint32_t i = 0; i < index; ++i)
+        {
+            duplicate = duplicate || (devQueFamIndexes->computeIndex == indices[i]);
+        }
 
+        if(!duplicate)
+        {
+            indices[index++] = devQueFamIndexes->computeIndex;
+        }
+    }
+    
     VkDeviceQueueCreateInfo* queCreateInfos = CR_ArenaAllocate(arena, 
             sizeof(VkDeviceQueueCreateInfo) * index); // for each que index
     
@@ -86,7 +102,30 @@ bool createLogicalDevice(
         queCreateInfos[i].pQueuePriorities = &quePriority;
     }
 
-    return false;
+    VkPhysicalDeviceFeatures deviceFeat = { 0 };
+    deviceFeat.samplerAnisotropy = VK_TRUE;
+
+    VkDeviceCreateInfo deviceCreateInfo = { 0 };
+    deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    deviceCreateInfo.queueCreateInfoCount = index;
+    deviceCreateInfo.pQueueCreateInfos = queCreateInfos;
+    deviceCreateInfo.pEnabledFeatures = &deviceFeat;
+    deviceCreateInfo.enabledExtensionCount = 1;
+
+    const char* exts[] = { VKH_SWAPCHAIN_EXTENSION_NAME };
+    deviceCreateInfo.ppEnabledExtensionNames = exts;
+
+    VkResult res = vkCreateDevice(physicalDevice, &deviceCreateInfo, NULL, device);
+
+    if(VK_SUCCESS != res)
+    {
+        CP_log_error("Failed to create vulkan device with error: %s", vkResultToString(res));
+        arena->head = oldHead;
+        return false;
+    }
+
+    arena->head = oldHead;
+    return true;
 }
 
 #ifdef __cplusplus

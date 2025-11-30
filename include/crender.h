@@ -55,6 +55,7 @@ typedef struct
 {
     VKH_Context context;
     VKH_Device device;
+    VKH_Swapchain swapchain;
     CR_Arena memArena;
 }
 CR_Renderer;

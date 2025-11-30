@@ -1,3 +1,6 @@
 [submodule "deps/cplat"]
 	path = deps/cplat
 	url = git@github.com:Spleeshmicannon/cplat.git
+[submodule "deps/Vulkan-Headers"]
+	path = deps/Vulkan-Headers
+	url = git@github.com:KhronosGroup/Vulkan-Headers.git

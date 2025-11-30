@@ -41,9 +41,11 @@ typedef struct
 }
 VKH_Device;
 
-CP_INLINE bool createDevice(const VKH_Context*const context, VKH_Device*const device, CR_Arena*const arena)
+CP_INLINE bool VKH_getDeviceQueues(VKH_Device*const deviceData, const VKH_DevQueFamIndexes*const queData);
+
+static CP_INLINE bool VKH_createDevice(const VKH_Context*const context, VKH_Device*const device, CR_Arena*const arena)
 {
-    device->physicalDevice = findPhysicalDevice(context, arena);
+    device->physicalDevice = VKH_findPhysicalDevice(context, arena);
 
     if(VK_NULL_HANDLE == device->physicalDevice)
     {
@@ -51,7 +53,7 @@ CP_INLINE bool createDevice(const VKH_Context*const context, VKH_Device*const de
         return false;
     }
 
-    VKH_DevQueFamIndexes deviceQueueFamilies = checkDeviceQueueFamilies(
+    VKH_DevQueFamIndexes deviceQueueFamilies = VKH_checkDeviceQueueFamilies(
         device->physicalDevice, 
         context->surface, 
         arena
@@ -79,6 +81,70 @@ CP_INLINE bool createDevice(const VKH_Context*const context, VKH_Device*const de
     {
         CP_log_error("Couldn't find a compute queue");
         return false;
+    }
+
+    if(!VKH_createLogicalDevice(
+        &device->device, 
+        device->physicalDevice, 
+        &deviceQueueFamilies,
+        arena)) 
+    {
+        return false;
+    }
+
+    if(!VKH_getDeviceQueues(device, &deviceQueueFamilies))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+CP_INLINE bool VKH_getDeviceQueues(VKH_Device*const deviceData, const VKH_DevQueFamIndexes*const queData)
+{
+    deviceData->graphicsQueue = VK_NULL_HANDLE;
+    deviceData->presentQueue = VK_NULL_HANDLE;
+    deviceData->transferQueue = VK_NULL_HANDLE;
+    deviceData->computeQueue = VK_NULL_HANDLE;
+    
+    if(queData->graphicsIsValid)
+    {
+        vkGetDeviceQueue(deviceData->device, queData->graphicsIndex, 0, &deviceData->graphicsQueue);
+        if(VK_NULL_HANDLE == deviceData->graphicsQueue)
+        {
+            CP_log_error("Failed to setup graphics queue");
+            return false;
+        }
+    }
+    
+    if(queData->presentIsValid)
+    {
+        vkGetDeviceQueue(deviceData->device, queData->presentIndex, 0, &deviceData->presentQueue);
+        if(VK_NULL_HANDLE == deviceData->presentQueue)
+        {
+            CP_log_error("Failed to setup present queue");
+            return false;
+        }
+    }
+    
+    if(queData->transferIsValid)
+    {
+        vkGetDeviceQueue(deviceData->device, queData->transferIndex, 0, &deviceData->transferQueue);
+        if(VK_NULL_HANDLE == deviceData->transferQueue)
+        {
+            CP_log_error("Failed to setup transfer queue");
+            return false;
+        }
+    }
+    
+    if(queData->computeIsValid)
+    {
+        vkGetDeviceQueue(deviceData->device, queData->computeIndex, 0, &deviceData->computeQueue);
+        if(VK_NULL_HANDLE == deviceData->computeQueue)
+        {
+            CP_log_error("Failed to setup compute queue");
+            return false;
+        }
     }
 
     return true;

@@ -60,7 +60,7 @@ CP_INLINE void* CR_ArenaAllocate(CR_Arena* arena, size_t bytes)
 {
     void* oldHead = arena->head; 
 
-    if((size_t)(oldHead - arena->arenaStart) >= arena->arenaSize)
+    if(((size_t)(oldHead - arena->arenaStart) + bytes) >= arena->arenaSize)
     {
         CP_log_error("Failed to allocate to arena");
         exit(-1);
@@ -68,6 +68,9 @@ CP_INLINE void* CR_ArenaAllocate(CR_Arena* arena, size_t bytes)
     }
 
     arena->head += bytes;
+
+    CP_log_info("allocation space used: %d / %d", (size_t)(arena->head - arena->arenaStart), arena->arenaSize);
+
     return oldHead;
 }
 

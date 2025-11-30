@@ -1,6 +1,6 @@
 #include "crender.h"
 
-#define VULKAN_HEAP_SIZE 10000 // 10kb
+#define VULKAN_HEAP_SIZE 200 // in bytes
 
 CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*const config, const CP_Window*const window)
 {
@@ -43,21 +43,19 @@ CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*c
         return CR_ERROR_VULKAN_CALL_FAILED;
     }
 
-    if(!createDevice(&renderer->context, &renderer->device, &renderer->memArena))
+    if(!VKH_createDevice(&renderer->context, &renderer->device, &renderer->memArena))
     {
         return CR_ERROR_VULKAN_CALL_FAILED;
     }
 
-    CP_log_info("Using %f%% of memory allocation", 
-        (float)(renderer->memArena.head - renderer->memArena.arenaStart) / 
-        (float)renderer->memArena.arenaSize * 100.0
-    );
+    VKH_createSwapchain(window, &renderer->context, &renderer->device, &renderer->swapchain);
 
     return CR_ERROR_SUCCESS;
 }
 
 CR_ERROR CR_destroyRenderer(CR_Renderer*const renderer)
 {
+    vkDestroyDevice(renderer->device.device, NULL);
     vkDestroySurfaceKHR(renderer->context.instance, renderer->context.surface, NULL);
     vkDestroyInstance(renderer->context.instance, NULL);
     CR_destoryArena(renderer->memArena);

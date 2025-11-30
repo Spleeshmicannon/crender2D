@@ -54,7 +54,6 @@ target_include_directories(crender2D PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/deps/Vulkan-Headers/include"
 )
 
-target_compile_definitions(crender2D PRIVATE CRENDER_DEBUG)
 if(WIN32)
     if(DEFINED ENV{VULKAN_HOME})
         set(VULKAN_HOME $ENV{VULKAN_HOME})
@@ -64,6 +63,7 @@ if(WIN32)
         message(FATAL_ERROR "Required environment variable: VULKAN_HOME")
     endif()
 else()
+    target_compile_definitions(crender2D PRIVATE CRENDER_DEBUG)
     target_link_libraries(crender2D PRIVATE cplat vulkan)
 endif()
 
