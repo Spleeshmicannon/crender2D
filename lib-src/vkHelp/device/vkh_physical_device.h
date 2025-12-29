@@ -61,7 +61,7 @@ CP_INLINE VkPhysicalDevice VKH_findPhysicalDevice(
         return VK_NULL_HANDLE;
     }
     
-    physicalDevices = CR_ArenaAllocate(arena, sizeof(VkPhysicalDevice) * deviceCount);
+    physicalDevices = CR_arenaAllocate(arena, sizeof(VkPhysicalDevice) * deviceCount);
     res = vkEnumeratePhysicalDevices(context->instance, &deviceCount, physicalDevices);
 
     if(VK_SUCCESS != res)
@@ -120,7 +120,7 @@ CP_INLINE VKH_DevQueFamIndexes VKH_checkDeviceQueueFamilies(VkPhysicalDevice dev
     VKH_DevQueFamIndexes devQueFamIndexes = { 0 };
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queFamCount, VK_NULL_HANDLE);
 
-    queFamProps = CR_ArenaAllocate(arena, sizeof(VkQueueFamilyProperties) * queFamCount);
+    queFamProps = CR_arenaAllocate(arena, sizeof(VkQueueFamilyProperties) * queFamCount);
 
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queFamCount, queFamProps);
     
@@ -157,7 +157,7 @@ CP_INLINE VKH_DevQueFamIndexes VKH_checkDeviceQueueFamilies(VkPhysicalDevice dev
         }
 
         VkBool32 supportsPresent = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supportsPresent);
+        (void)vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supportsPresent);
         if(supportsPresent)
         {
             devQueFamIndexes.presentIndex = i;
@@ -171,6 +171,48 @@ CP_INLINE VKH_DevQueFamIndexes VKH_checkDeviceQueueFamilies(VkPhysicalDevice dev
     arena->head = oldHead;
 
     return devQueFamIndexes;
+}
+
+CP_INLINE bool VKH_QueryDeviceSwapchainSupport(
+    const VkPhysicalDevice device, 
+    const VkSurfaceKHR surface,
+    VkSurfaceFormatKHR*const surfaceFormat,
+    CR_Arena*const arena)
+{
+    VkSurfaceCapabilitiesKHR surfaceCapabilities;
+    VkSurfaceFormatKHR* surfaceFormats;
+    void*const oldHead = arena->head;
+    uint32_t surfaceFormatCount;
+
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &surfaceCapabilities);
+    
+    CP_log_info("Device supports max image extent of %dx%d", 
+        surfaceCapabilities.maxImageExtent.width,
+        surfaceCapabilities.maxImageExtent.height);
+
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &surfaceFormatCount,VK_NULL_HANDLE);
+
+    surfaceFormats = CR_arenaAllocate(arena, sizeof(VkSurfaceFormatKHR) * surfaceFormatCount);
+
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &surfaceFormatCount, surfaceFormats);
+
+    for(uint32_t i = 0; i < surfaceFormatCount; ++i)
+    {
+        // Non-linear format, may be an issue for some integrated graphics but should
+        // be fine for most cases. TODO -> Revisit this decision
+        if((surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB ||
+            surfaceFormats[i].format == VK_FORMAT_R8G8B8A8_SRGB) &&
+            surfaceFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+        {
+            *surfaceFormat = surfaceFormats[i];
+            arena->head = oldHead;
+            return true;
+        }
+    }
+
+    arena->head = oldHead;
+
+    return false;
 }
 
 #ifdef __cplusplus

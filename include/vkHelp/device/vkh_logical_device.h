@@ -81,7 +81,7 @@ static CP_INLINE bool VKH_createLogicalDevice(
         }
     }
     
-    VkDeviceQueueCreateInfo* queCreateInfos = CR_ArenaAllocate(arena, 
+    VkDeviceQueueCreateInfo* queCreateInfos = CR_arenaAllocate(arena, 
             sizeof(VkDeviceQueueCreateInfo) * index); // for each que index
     
     float quePriority = 1.0f;

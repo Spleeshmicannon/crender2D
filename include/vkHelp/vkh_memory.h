@@ -56,7 +56,7 @@ CP_INLINE void CR_destoryArena(CR_Arena arena)
     CP_sysFree(arena.arenaStart);
 }
 
-CP_INLINE void* CR_ArenaAllocate(CR_Arena* arena, size_t bytes)
+CP_INLINE void* CR_arenaAllocate(CR_Arena* arena, size_t bytes)
 {
     void* oldHead = arena->head; 
 

@@ -36,7 +36,11 @@ typedef struct
 }
 VKH_Swapchain;
 
-CP_INLINE bool VKH_createSwapchain(const CP_Window*const window, const VKH_Context*const context, const VKH_Device*const device, VKH_Swapchain*const swapchain)
+CP_INLINE bool VKH_createSwapchain(
+    const CP_Window*const window, 
+    const VKH_Context*const context, 
+    const VKH_Device*const device, 
+    VKH_Swapchain*const swapchain)
 {
     int width, height;
     CP_getScreenWH(window, &width, &height);
