@@ -48,16 +48,48 @@ CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*c
         return CR_ERROR_VULKAN_CALL_FAILED;
     }
 
-    VKH_createSwapchain(window, &renderer->context, &renderer->device, &renderer->swapchain);
+    if(!VKH_createSwapchain(window, &renderer->context, &renderer->device, &renderer->swapchain))
+    {
+        return CR_ERROR_VULKAN_CALL_FAILED;
+    }
 
     return CR_ERROR_SUCCESS;
 }
 
+void CR_drawScreen(CR_Renderer*const renderer)
+{
+    vkWaitForFences(
+        renderer->device.device,
+        1,
+        VK_NULL_HANDLE, // fences in flight
+        VK_TRUE,
+        UINT64_MAX
+    );
+
+    vkResetFences(renderer->device.device, 1, VK_NULL_HANDLE);
+
+    VkResult res = vkAcquireNextImageKHR(
+        renderer->device.device,
+        renderer->swapchain.swapchain,
+        UINT64_MAX,
+        VK_NULL_HANDLE, // image available
+        VK_NULL_HANDLE,
+        VK_NULL_HANDLE // image index
+    );
+
+    if(VK_TRUE != res)
+    {
+        CP_log_error("Failed to acquire next image for swapchain");
+        return;
+    }
+}
+
 CR_ERROR CR_destroyRenderer(CR_Renderer*const renderer)
 {
-    vkDestroyDevice(renderer->device.device, NULL);
-    vkDestroySurfaceKHR(renderer->context.instance, renderer->context.surface, NULL);
-    vkDestroyInstance(renderer->context.instance, NULL);
+    vkDestroySwapchainKHR(renderer->device.device, renderer->swapchain.swapchain, VK_NULL_HANDLE);
+    vkDestroyDevice(renderer->device.device, VK_NULL_HANDLE);
+    vkDestroySurfaceKHR(renderer->context.instance, renderer->context.surface, VK_NULL_HANDLE);
+    vkDestroyInstance(renderer->context.instance, VK_NULL_HANDLE);
     CR_destoryArena(renderer->memArena);
     return CR_ERROR_SUCCESS;
 }

@@ -62,6 +62,8 @@ CR_Renderer;
 
 CR_ERROR CR_createRenderer(CR_Renderer*const renderer, const CR_RendererConfig*const config, const CP_Window*const window);
 
+void CR_drawScreen(CR_Renderer*const renderer);
+
 CR_ERROR CR_destroyRenderer(CR_Renderer*const renderer);
 
 #ifdef __cplusplus

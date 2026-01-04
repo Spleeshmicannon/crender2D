@@ -25,6 +25,8 @@
 #include "../vkh_memory.h"
 #include "../context/vkh_context.h"
 
+#define VKH_PRESENT_MODE VK_PRESENT_MODE_FIFO_KHR
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,10 +38,30 @@ typedef struct
 } 
 VKH_DevQueFamIndexes;
 
-CP_INLINE uint32_t VKH_findBestPhysicalDevice(VkPhysicalDevice* physicalDevices, uint32_t deviceCount);
+typedef struct
+{
+    VkSurfaceFormatKHR surfaceFormat;
+    VkSurfaceCapabilitiesKHR surfaceCapabilites;
+    VkPresentModeKHR presentMode;
+}
+VKH_DeviceAttributes;
+
+CP_INLINE uint32_t VKH_findBestPhysicalDevice(
+    VkPhysicalDevice* physicalDevices, 
+    uint32_t deviceCount,
+    const VkSurfaceKHR surface,
+    VKH_DeviceAttributes*const deviceAttributes,
+    CR_Arena*const arena);
+
+CP_INLINE bool VKH_QueryDeviceSwapchainSupport(
+    const VkPhysicalDevice device, 
+    const VkSurfaceKHR surface,
+    VKH_DeviceAttributes*const deviceAttributes,
+    CR_Arena*const arena);
 
 CP_INLINE VkPhysicalDevice VKH_findPhysicalDevice(
         const VKH_Context*const context,
+        VKH_DeviceAttributes*const deviceAttributes,
         CR_Arena*const arena
 )
 {
@@ -71,18 +93,36 @@ CP_INLINE VkPhysicalDevice VKH_findPhysicalDevice(
         return VK_NULL_HANDLE;
     }
 
-    uint32_t bestDeviceIndex = VKH_findBestPhysicalDevice(physicalDevices, deviceCount);
+    uint32_t bestDeviceIndex = VKH_findBestPhysicalDevice(
+        physicalDevices, 
+        deviceCount,
+        context->surface,
+        deviceAttributes,
+        arena
+    );
 
     arena->head = startHead;
+
+    if(bestDeviceIndex == UINT32_MAX)
+    {
+        return VK_NULL_HANDLE;
+    }
     
     return physicalDevices[bestDeviceIndex];
 }
 
-CP_INLINE uint32_t VKH_findBestPhysicalDevice(VkPhysicalDevice* physicalDevices, uint32_t deviceCount)
+CP_INLINE uint32_t VKH_findBestPhysicalDevice(
+    VkPhysicalDevice* physicalDevices, 
+    uint32_t deviceCount,
+    const VkSurfaceKHR surface,
+    VKH_DeviceAttributes*const deviceAttributes,
+    CR_Arena*const arena)
 {
     uint32_t discreteGPUIndex = 0;
     uint32_t integratedGPUIndex = 0;
     bool foundDiscreteGPU = false;
+    bool foundIntegratedGPU = false;
+    VKH_DeviceAttributes tmpDeviceAttributes = {};
 
     for(uint32_t i = 0; i < deviceCount; ++i)
     {
@@ -93,22 +133,34 @@ CP_INLINE uint32_t VKH_findBestPhysicalDevice(VkPhysicalDevice* physicalDevices,
         CP_log_info("          ID: %d", props.deviceID);
         CP_log_info("        Type: %s", vkPhysicalDeviceTypeToString(props.deviceType));
         
-        if(props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        if((props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) && 
+            VKH_QueryDeviceSwapchainSupport(physicalDevices[i], surface, &tmpDeviceAttributes, arena))
         {
             foundDiscreteGPU = true;
             discreteGPUIndex = i;
+            break;
         }
-        else if(props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+        else if((props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) && 
+            VKH_QueryDeviceSwapchainSupport(physicalDevices[i], surface, &tmpDeviceAttributes, arena))
         {
+            foundIntegratedGPU = true;
             integratedGPUIndex = i;
         }
     }
+
+    if(!(foundIntegratedGPU || foundDiscreteGPU))
+    {
+        CP_log_error("Failed find a suitable GPU, quitting");
+        return UINT32_MAX;
+    }
+
+    *deviceAttributes = tmpDeviceAttributes;
 
     if(foundDiscreteGPU)
     {
         return discreteGPUIndex;
     }
-
+    
     return integratedGPUIndex;
 }
 
@@ -176,13 +228,14 @@ CP_INLINE VKH_DevQueFamIndexes VKH_checkDeviceQueueFamilies(VkPhysicalDevice dev
 CP_INLINE bool VKH_QueryDeviceSwapchainSupport(
     const VkPhysicalDevice device, 
     const VkSurfaceKHR surface,
-    VkSurfaceFormatKHR*const surfaceFormat,
+    VKH_DeviceAttributes*const deviceAttributes,
     CR_Arena*const arena)
 {
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
     VkSurfaceFormatKHR* surfaceFormats;
+    VkPresentModeKHR* presentModes;
     void*const oldHead = arena->head;
-    uint32_t surfaceFormatCount;
+    uint32_t surfaceFormatCount = 0, presentModeCount = 0;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &surfaceCapabilities);
     
@@ -195,7 +248,8 @@ CP_INLINE bool VKH_QueryDeviceSwapchainSupport(
     surfaceFormats = CR_arenaAllocate(arena, sizeof(VkSurfaceFormatKHR) * surfaceFormatCount);
 
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &surfaceFormatCount, surfaceFormats);
-
+    
+    bool foundValidSurfaceFormat = false;
     for(uint32_t i = 0; i < surfaceFormatCount; ++i)
     {
         // Non-linear format, may be an issue for some integrated graphics but should
@@ -204,15 +258,40 @@ CP_INLINE bool VKH_QueryDeviceSwapchainSupport(
             surfaceFormats[i].format == VK_FORMAT_R8G8B8A8_SRGB) &&
             surfaceFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
         {
-            *surfaceFormat = surfaceFormats[i];
-            arena->head = oldHead;
-            return true;
+            deviceAttributes->surfaceFormat = surfaceFormats[i];
+            foundValidSurfaceFormat = true;
+            break;
         }
     }
 
+    if(!foundValidSurfaceFormat)
+    {
+        arena->head = oldHead;
+        return false;
+    }
+
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, VK_NULL_HANDLE);
+
+    presentModes = CR_arenaAllocate(arena, sizeof(VkPresentModeKHR) * presentModeCount);
+
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, presentModes);
+    
+    bool foundValidPresentMode = false;
+    for(uint32_t i = 0; i < presentModeCount; ++i)
+    {
+        if(presentModes[i] == VKH_PRESENT_MODE)
+        {
+            deviceAttributes->presentMode = presentModes[i];
+            foundValidPresentMode = true;
+            break;
+        }
+    }
+
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &deviceAttributes->surfaceCapabilites);
+
     arena->head = oldHead;
 
-    return false;
+    return foundValidSurfaceFormat && foundValidPresentMode;
 }
 
 #ifdef __cplusplus

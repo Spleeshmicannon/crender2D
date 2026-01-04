@@ -34,6 +34,9 @@ typedef struct
 {
     VkDevice device;
     VkPhysicalDevice physicalDevice;
+    
+    VKH_DeviceAttributes deviceAttributes;
+
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     VkQueue transferQueue;
@@ -41,11 +44,20 @@ typedef struct
 }
 VKH_Device;
 
-CP_INLINE bool VKH_getDeviceQueues(VKH_Device*const deviceData, const VKH_DevQueFamIndexes*const queData);
+CP_INLINE bool VKH_getDeviceQueues(
+    VKH_Device*const deviceData, 
+    const VKH_DevQueFamIndexes*const queData);
 
-static CP_INLINE bool VKH_createDevice(const VKH_Context*const context, VKH_Device*const device, CR_Arena*const arena)
+static CP_INLINE bool VKH_createDevice(
+    const VKH_Context*const context, 
+    VKH_Device*const device, 
+    CR_Arena*const arena)
 {
-    device->physicalDevice = VKH_findPhysicalDevice(context, arena);
+    device->physicalDevice = VKH_findPhysicalDevice(
+        context, 
+        &device->deviceAttributes, 
+        arena
+    );
 
     if(VK_NULL_HANDLE == device->physicalDevice)
     {

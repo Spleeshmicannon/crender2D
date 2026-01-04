@@ -27,6 +27,8 @@
 #include "context/vkh_context.h"
 #include "device/vkh_device.h"
 #include "vkh_swapchain.h"
+#include "vkh_commandBuffer.h"
+#include "vkh_renderPass.h"
 
 #ifdef __cplusplus
 extern "C" {

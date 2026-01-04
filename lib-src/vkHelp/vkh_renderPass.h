@@ -1,5 +1,5 @@
 /* zlib license
- * Copyright (C) 2025-11-16 16:18:44 J. Benson
+ * Copyright (C) 2026-01-04 11:49:11 J. Benson
  * 
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -18,17 +18,8 @@
  * 3. This notice may not be removed or altered from any source distribution. 
 */
 
-#ifndef VKH_H
-#define VKH_H
-
-#include "vkh_include.h"
-#include "vkh_memory.h"
-
-#include "context/vkh_context.h"
-#include "device/vkh_device.h"
-#include "vkh_swapchain.h"
-#include "vkh_commandBuffer.h"
-#include "vkh_renderPass.h"
+#ifndef VKH_RENDERPASS_H
+#define VKH_RENDERPASS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,5 +29,5 @@ extern "C" {
 }
 #endif
 
-#endif // VKH_H
+#endif // VKH_RENDERPASS_H
 
